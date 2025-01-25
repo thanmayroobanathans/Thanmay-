@@ -1,1 +1,152 @@
-<h1>Hello!</h1>
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { motion } from 'framer-motion';
+import { LucideSend } from 'lucide-react';
+
+const App = () => {
+  const [questions, setQuestions] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newResource, setNewResource] = useState({ title: "", link: "", description: "" });
+
+  useEffect(() => {
+    // Initialize resources and questions from localStorage or API.
+    const savedQuestions = JSON.parse(localStorage.getItem("questions")) || [];
+    const savedResources = JSON.parse(localStorage.getItem("resources")) || [];
+    setQuestions(savedQuestions);
+    setResources(savedResources);
+  }, []);
+
+  const handleAddQuestion = () => {
+    if (newQuestion.trim() === "") return;
+    const updatedQuestions = [{ id: Date.now(), text: newQuestion, answers: [] }, ...questions];
+    setQuestions(updatedQuestions);
+    localStorage.setItem("questions", JSON.stringify(updatedQuestions));
+    setNewQuestion("");
+  };
+
+  const handleAnswerQuestion = (id, answer) => {
+    const updatedQuestions = questions.map((q) => {
+      if (q.id === id) {
+        return { ...q, answers: [...q.answers, answer] };
+      }
+      return q;
+    });
+    setQuestions(updatedQuestions);
+    localStorage.setItem("questions", JSON.stringify(updatedQuestions));
+  };
+
+  const handleAddResource = () => {
+    if (newResource.title.trim() === "" || newResource.link.trim() === "") return;
+    const updatedResources = [newResource, ...resources];
+    setResources(updatedResources);
+    localStorage.setItem("resources", JSON.stringify(updatedResources));
+    setNewResource({ title: "", link: "", description: "" });
+  };
+
+  return (
+    <div className="p-4 min-h-screen bg-gray-100">
+      <h1 className="text-2xl font-bold text-center mb-6">Aspiring Students Community</h1>
+      <Tabs defaultValue="questions">
+        <TabsList className="flex justify-center mb-4">
+          <TabsTrigger value="questions">Questions</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+        </TabsList>
+
+        {/* Questions Section */}
+        <TabsContent value="questions">
+          <Card className="mb-4">
+            <CardContent className="flex flex-col space-y-2">
+              <Textarea
+                placeholder="Ask a question..."
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+              />
+              <Button onClick={handleAddQuestion}>Post Question</Button>
+            </CardContent>
+          </Card>
+
+          {questions.map((q) => (
+            <Card key={q.id} className="mb-4">
+              <CardContent>
+                <h2 className="font-bold text-lg mb-2">{q.text}</h2>
+                <ul className="space-y-2">
+                  {q.answers.map((a, i) => (
+                    <li key={i} className="p-2 bg-gray-200 rounded">{a}</li>
+                  ))}
+                </ul>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="mt-2">Answer</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <Textarea
+                      placeholder="Write your answer..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAnswerQuestion(q.id, e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        {/* Resources Section */}
+        <TabsContent value="resources">
+          <Card className="mb-4">
+            <CardContent className="flex flex-col space-y-2">
+              <Input
+                placeholder="Resource Title"
+                value={newResource.title}
+                onChange={(e) => setNewResource({ ...newResource, title: e.target.value })}
+              />
+              <Input
+                placeholder="Resource Link"
+                value={newResource.link}
+                onChange={(e) => setNewResource({ ...newResource, link: e.target.value })}
+              />
+              <Textarea
+                placeholder="Resource Description"
+                value={newResource.description}
+                onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
+              />
+              <Button onClick={handleAddResource}>Add Resource</Button>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {resources.map((res, index) => (
+              <Card key={index}>
+                <CardContent>
+                  <h3 className="font-bold text-lg mb-2">{res.title}</h3>
+                  <p>{res.description}</p>
+                  <a
+                    href={res.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline mt-2 inline-block"
+                  >
+                    Visit Resource
+                  </a>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default App;
