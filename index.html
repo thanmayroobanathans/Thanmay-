@@ -73,9 +73,19 @@
     </div>
 
     <script>
+        function extractVideoId(url) {
+            let videoId = null;
+            let regex1 = /(?:youtube\.com\/(?:.*v=|.*\/|.*videos\/|.*embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            let match = url.match(regex1);
+            if (match) {
+                videoId = match[1];
+            }
+            return videoId;
+        }
+
         function loadVideo() {
             const url = document.getElementById("video-url").value;
-            const videoId = url.split("v=")[1]?.split("&")[0];
+            const videoId = extractVideoId(url);
 
             if (videoId) {
                 document.getElementById("video-container").innerHTML = `
