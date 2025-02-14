@@ -1,169 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Exchange Portal</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    .section {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-      padding: 20px;
-    }
-    h1, h2 {
-      color: #333;
-    }
-    textarea, input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .question, .resource {
-      margin-bottom: 20px;
-    }
-    .answers {
-      margin-top: 10px;
-    }
-    .answer {
-      background: #f0f0f0;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 5px;
-    }
-    a {
-      color: #007bff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusTube - Distraction-Free Study</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #121212;
+            color: white;
+        }
+        #video-container {
+            margin-top: 20px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        input {
+            width: 60%;
+        }
+        button {
+            cursor: pointer;
+        }
+        iframe {
+            width: 80%;
+            height: 450px;
+            margin-top: 20px;
+            border: none;
+        }
+        .timer, .bookmarks {
+            margin-top: 20px;
+        }
+        .bookmark-list {
+            list-style: none;
+            padding: 0;
+        }
+        .bookmark-list li {
+            background: #1e1e1e;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Student Exchange Portal</h1>
 
-    <div class="section">
-      <h2>Ask a Question</h2>
-      <textarea id="newQuestion" placeholder="Enter your question..."></textarea>
-      <button onclick="addQuestion()">Post Question</button>
+    <h1>FocusTube - Distraction-Free Study</h1>
+
+    <p>Paste a YouTube lecture URL:</p>
+    <input type="text" id="video-url" placeholder="Paste YouTube URL here">
+    <button onclick="loadVideo()">Watch</button>
+    <button onclick="saveBookmark()">Save Video</button>
+
+    <div id="video-container"></div>
+
+    <!-- Study Timer -->
+    <div class="timer">
+        <h2>Pomodoro Timer</h2>
+        <p id="timer">25:00</p>
+        <button onclick="startTimer()">Start</button>
+        <button onclick="resetTimer()">Reset</button>
     </div>
 
-    <div class="section" id="questionsSection">
-      <h2>Questions</h2>
+    <!-- Bookmarked Videos -->
+    <div class="bookmarks">
+        <h2>Saved Lectures</h2>
+        <ul id="bookmark-list" class="bookmark-list"></ul>
     </div>
 
-    <div class="section">
-      <h2>Add a Resource</h2>
-      <input id="resourceTitle" placeholder="Title">
-      <input id="resourceLink" placeholder="Link">
-      <textarea id="resourceDescription" placeholder="Description"></textarea>
-      <button onclick="addResource()">Add Resource</button>
-    </div>
+    <script>
+        function loadVideo() {
+            const url = document.getElementById("video-url").value;
+            const videoId = url.split("v=")[1]?.split("&")[0];
 
-    <div class="section" id="resourcesSection">
-      <h2>Resources</h2>
-    </div>
-  </div>
+            if (videoId) {
+                document.getElementById("video-container").innerHTML = `
+                    <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1" allowfullscreen></iframe>
+                `;
+            } else {
+                alert("Please enter a valid YouTube URL.");
+            }
+        }
 
-  <script>
-    const questions = JSON.parse(localStorage.getItem("questions")) || [];
-    const resources = JSON.parse(localStorage.getItem("resources")) || [];
+        function saveBookmark() {
+            const url = document.getElementById("video-url").value;
+            if (url) {
+                let bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+                bookmarks.push(url);
+                localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+                displayBookmarks();
+            }
+        }
 
-    function displayQuestions() {
-      const questionsSection = document.getElementById("questionsSection");
-      questionsSection.innerHTML = '<h2>Questions</h2>';
-      questions.forEach((question, index) => {
-        const questionDiv = document.createElement("div");
-        questionDiv.className = "question";
-        questionDiv.innerHTML = `
-          <h3>${question.text}</h3>
-          <textarea placeholder="Write your answer..." onkeydown="addAnswer(event, ${index})"></textarea>
-          <div class="answers">
-            ${question.answers.map(a => `<div class="answer">${a}</div>`).join("")}
-          </div>
-        `;
-        questionsSection.appendChild(questionDiv);
-      });
-    }
+        function displayBookmarks() {
+            let bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+            let bookmarkList = document.getElementById("bookmark-list");
+            bookmarkList.innerHTML = "";
+            bookmarks.forEach(url => {
+                bookmarkList.innerHTML += `<li><a href="${url}" target="_blank">${url}</a></li>`;
+            });
+        }
 
-    function addQuestion() {
-      const newQuestion = document.getElementById("newQuestion").value.trim();
-      if (newQuestion === "") return;
-      questions.push({ text: newQuestion, answers: [] });
-      localStorage.setItem("questions", JSON.stringify(questions));
-      displayQuestions();
-      document.getElementById("newQuestion").value = "";
-    }
+        // Study Timer
+        let time = 25 * 60;
+        let timerInterval;
 
-    function addAnswer(event, questionIndex) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        const answer = event.target.value.trim();
-        if (answer === "") return;
-        questions[questionIndex].answers.push(answer);
-        localStorage.setItem("questions", JSON.stringify(questions));
-        displayQuestions();
-      }
-    }
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (time > 0) {
+                    time--;
+                    let minutes = Math.floor(time / 60);
+                    let seconds = time % 60;
+                    document.getElementById("timer").innerText = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+                } else {
+                    clearInterval(timerInterval);
+                    alert("Time's up! Take a break.");
+                }
+            }, 1000);
+        }
 
-    function displayResources() {
-      const resourcesSection = document.getElementById("resourcesSection");
-      resourcesSection.innerHTML = '<h2>Resources</h2>';
-      resources.forEach(resource => {
-        const resourceDiv = document.createElement("div");
-        resourceDiv.className = "resource";
-        resourceDiv.innerHTML = `
-          <h3>${resource.title}</h3>
-          <p>${resource.description}</p>
-          <a href="${resource.link}" target="_blank">Visit Resource</a>
-        `;
-        resourcesSection.appendChild(resourceDiv);
-      });
-    }
+        function resetTimer() {
+            clearInterval(timerInterval);
+            time = 25 * 60;
+            document.getElementById("timer").innerText = "25:00";
+        }
 
-    function addResource() {
-      const title = document.getElementById("resourceTitle").value.trim();
-      const link = document.getElementById("resourceLink").value.trim();
-      const description = document.getElementById("resourceDescription").value.trim();
-      if (title === "" || link === "") return;
-      resources.push({ title, link, description });
-      localStorage.setItem("resources", JSON.stringify(resources));
-      displayResources();
-      document.getElementById("resourceTitle").value = "";
-      document.getElementById("resourceLink").value = "";
-      document.getElementById("resourceDescription").value = "";
-    }
+        // Load saved bookmarks on page load
+        displayBookmarks();
+    </script>
 
-    displayQuestions();
-    displayResources();
-  </script>
 </body>
 </html>
